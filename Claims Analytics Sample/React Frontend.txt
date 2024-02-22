@@ -1,0 +1,42 @@
+npx create-react-app insurance-analytics
+cd insurance-analytics
+npm start
+
+import React, { useState } from 'react';
+import axios from 'axios';
+
+function App() {
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const handleFileChange = event => {
+    setSelectedFile(event.target.files[0]);
+  };
+
+  const handleSubmit = async () => {
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const response = await axios.post('http://localhost:5000/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log(response.data);
+      // Process and display the response data in your preferred way
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    }
+  };
+
+  return (
+    <div>
+      <h1>Upload Insurance Claims Data</h1>
+      <input type="file" onChange={handleFileChange} />
+      <button onClick={handleSubmit}>Analyze</button>
+      {/* Visualization component goes here */}
+    </div>
+  );
+}
+
+export default App;

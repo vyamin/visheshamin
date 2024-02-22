@@ -1,0 +1,28 @@
+pip install Flask pandas
+
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import pandas as pd
+
+app = Flask(__name__)
+CORS(app)
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    file = request.files['file']
+    if file:
+        # Process the file using pandas or any other module
+        df = pd.read_csv(file)
+        # Placeholder for analytics function
+        analytics_result = perform_analytics(df)
+        return jsonify(analytics_result)
+    else:
+        return jsonify({"error": "No file provided"}), 400
+
+def perform_analytics(df):
+    # Placeholder for the analytics logic
+    # Return a summary or analysis result
+    return {"message": "Analytics performed"}
+
+if __name__ == '__main__':
+    app.run(debug=True)
