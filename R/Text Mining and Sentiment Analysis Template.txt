@@ -1,0 +1,21 @@
+library(tm)
+library(syuzhet)
+
+# Sample text data
+texts <- c("I love this product, it's absolutely wonderful!",
+           "Terrible service, I'm very disappointed.",
+           "Had a great time, the experience was fantastic!",
+           "Worst experience ever, do not recommend.")
+
+# Text mining: Create a corpus and clean text
+corpus <- Corpus(VectorSource(texts))
+corpus <- tm_map(corpus, content_transformer(tolower))
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeNumbers)
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+corpus <- tm_map(corpus, stripWhitespace)
+
+# Sentiment analysis
+sentiments <- get_nrc_sentiment(as.character(corpus))
+barplot(colSums(prop.table(sentiments[, c("positive", "negative")])),
+        legend.text = c("Positive", "Negative"), beside = TRUE, col = c("green", "red"))

@@ -1,0 +1,11 @@
+library(ggplot2)
+library(FactoMineR)
+
+# Example dataset: USArrests
+data("USArrests")
+
+# Performing PCA
+pca_result <- PCA(USArrests, graph = FALSE)
+
+# Plotting the PCA results
+plot(pca_result, choix = "ind")

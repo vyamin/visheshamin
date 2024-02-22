@@ -1,0 +1,12 @@
+library(shiny)
+library(ggplot2)
+
+# Define UI
+ui <- fluidPage(
+  titlePanel("Interactive Data Visualization"),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("var", "Choose a variable:",
+                  choices = colnames(mtcars))
+    ),
+    mainPanel

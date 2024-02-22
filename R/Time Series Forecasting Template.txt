@@ -1,0 +1,19 @@
+library(forecast)
+library(tseries)
+library(ggplot2)
+
+# Load time series data (Example: AirPassengers dataset)
+data("AirPassengers")
+ts_data <- AirPassengers
+
+# Decompose the time series to visualize components
+decomposed <- stl(ts_data, s.window = "periodic")
+plot(decomposed)
+
+# Fit ARIMA model
+fit <- auto.arima(ts_data)
+summary(fit)
+
+# Forecast future values
+future_values <- forecast(fit, h = 12) # Forecast next 12 months
+plot(future_values)
