@@ -1,0 +1,38 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+
+# Load dataset
+df = pd.read_csv('your_dataset.csv')
+
+# Define columns
+numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns
+categorical_columns = df.select_dtypes(include=['object']).columns
+
+# Preprocessing for numeric data: impute missing values and scale
+numeric_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='median')),
+    ('scaler', StandardScaler())])
+
+# Preprocessing for categorical data: impute missing values and apply one-hot encoding
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))])
+
+# Bundle preprocessing for numeric and categorical data
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numeric_transformer, numeric_columns),
+        ('cat', categorical_transformer, categorical_columns)])
+
+# Apply preprocessing
+preprocessed_data = preprocessor.fit_transform(df)
+
+# Split dataset into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(
+    preprocessed_data, df['target_column'], test_size=0.2, random_state=42)
+
+print("Data preprocessing completed.")

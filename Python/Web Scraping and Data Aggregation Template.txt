@@ -1,0 +1,41 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+# Define the target URL to scrape
+url = 'http://example.com/page-to-scrape'
+
+# Perform an HTTP GET request to the URL
+response = requests.get(url)
+
+# Check if the request was successful
+if response.status_code == 200:
+    # Use BeautifulSoup to parse the HTML content
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    # Define lists to store the scraped data
+    data_column_1 = []
+    data_column_2 = []
+    
+    # Find the HTML elements containing the data you want to scrape
+    # (Adjust selectors based on the actual HTML structure)
+    for element in soup.find_all('div', class_='data-container'):
+        column_1_data = element.find('span', class_='column-1-class').text
+        column_2_data = element.find('span', class_='column-2-class').text
+        
+        data_column_1.append(column_1_data)
+        data_column_2.append(column_2_data)
+    
+    # Aggregate the data into a pandas DataFrame
+    df = pd.DataFrame({
+        'Column 1': data_column_1,
+        'Column 2': data_column_2
+    })
+    
+    # Save the DataFrame to a CSV file
+    df.to_csv('scraped_data.csv', index=False)
+    
+    print("Web scraping and data aggregation completed successfully.")
+else:
+    print("Failed to retrieve data from the URL.")
+

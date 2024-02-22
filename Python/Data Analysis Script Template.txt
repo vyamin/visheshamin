@@ -1,0 +1,43 @@
+import pandas as pd
+import numpy as np
+from scipy import stats
+
+# Load dataset
+df = pd.read_csv('your_dataset.csv')
+
+# Summary statistics for numeric columns
+numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns
+summary_statistics = df[numeric_columns].describe()
+print("Summary Statistics:\n", summary_statistics)
+
+# Hypothesis testing: Comparing means of two groups in a categorical column
+# Adjust the column names as per your dataset
+categorical_column = 'category_column_name'  # Change this to your categorical column
+numeric_column = numeric_columns[0]  # Change this to your numeric column for analysis
+
+# Ensure there are at least two unique categories to compare
+if df[categorical_column].nunique() >= 2:
+    unique_categories = df[categorical_column].unique()
+    group1 = df[df[categorical_column] == unique_categories[0]][numeric_column]
+    group2 = df[df[categorical_column] == unique_categories[1]][numeric_column]
+    
+    # T-test
+    t_stat, p_value = stats.ttest_ind(group1, group2)
+    print(f"T-test for {unique_categories[0]} vs {unique_categories[1]} on {numeric_column}:")
+    print("T-statistic:", t_stat)
+    print("P-value:", p_value)
+
+# Time-series analysis (if applicable)
+# Assuming there's a datetime column and a numeric column for analysis
+datetime_column = 'datetime_column_name'  # Change this to your datetime column
+df[datetime_column] = pd.to_datetime(df[datetime_column])
+df.set_index(datetime_column, inplace=True)
+
+# Resample and calculate monthly mean of the numeric column
+monthly_mean = df[numeric_column].resample('M').mean()
+monthly_mean.plot(title=f'Monthly Mean of {numeric_column}')
+plt.xlabel('Month')
+plt.ylabel(numeric_column)
+plt.show()
+
+print("Data analysis completed.")

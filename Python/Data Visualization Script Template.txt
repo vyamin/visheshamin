@@ -1,0 +1,47 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load dataset
+df = pd.read_csv('your_dataset.csv')
+
+# Set the style of seaborn
+sns.set(style="whitegrid")
+
+# Histograms for numeric columns
+numeric_columns = df.select_dtypes(include=['int64', 'float64']).columns
+for col in numeric_columns:
+    plt.figure(figsize=(10, 6))
+    sns.histplot(df[col], kde=True)
+    plt.title(f'Distribution of {col}')
+    plt.xlabel(col)
+    plt.ylabel('Frequency')
+    plt.show()
+
+# Scatter plot for the first two numeric columns, change as needed
+if len(numeric_columns) > 1:
+    plt.figure(figsize=(10, 6))
+    sns.scatterplot(data=df, x=numeric_columns[0], y=numeric_columns[1])
+    plt.title(f'Scatter Plot of {numeric_columns[0]} vs {numeric_columns[1]}')
+    plt.xlabel(numeric_columns[0])
+    plt.ylabel(numeric_columns[1])
+    plt.show()
+
+# Box plots for numeric columns by a categorical column, adjust the categorical column name
+categorical_columns = df.select_dtypes(include=['object']).columns
+if categorical_columns:
+    cat_col = categorical_columns[0]  # Change as needed
+    for num_col in numeric_columns:
+        plt.figure(figsize=(10, 6))
+        sns.boxplot(x=cat_col, y=num_col, data=df)
+        plt.title(f'Box Plot of {num_col} by {cat_col}')
+        plt.show()
+
+# Correlation heatmap
+plt.figure(figsize=(12, 10))
+correlation_matrix = df[numeric_columns].corr()
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', linewidths=.5)
+plt.title('Correlation Heatmap')
+plt.show()
+
+print("Data visualization completed.")
