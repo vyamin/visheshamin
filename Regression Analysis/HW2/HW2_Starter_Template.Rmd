@@ -1,0 +1,343 @@
+---
+output:
+  html_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Peer Grader Guidance
+Please review the student expectations for peer review grading and peer review comments. Overall, we ask that you score with accuracy. When grading your peers, you will not only learn how to improve your future homework submissions but you will also gain deeper understanding of the concepts in the assignments. When assigning scores, consider the responses to the questions given your understanding of the problem and using the solutions as a guide. Moreover, please give partial credit for a concerted effort, but also be thorough. **Add comments to your review, particularly when deducting points, to explain why the student missed the points.** Ensure your comments are specific to questions and the student responses in the assignment.
+
+
+# Background
+
+The provided dataset is a subset of the public data from the 2022 EPA Automotive Trends Report. It will be used to study the effects of various vehicle characteristics on CO2 emissions.
+
+## Data Description
+
+The dataset consists of a dataframe with 2060 observations with the following 7 variables:
+
+1. Model.Year: year the vehicle model was produced (quantitative)
+2. Type: vehicle type (qualitative)
+3. MPG: miles per gallon of fuel (quantitative)
+4. Weight: vehicle weight in lbs (quantitative)
+5. Horsepower: vehicle horsepower in HP (quantitative)
+6. Acceleration: acceleration time (from 0 to 60 mph) in seconds (quantitative)
+7. CO2: carbon dioxide emissions in g/mi (response variable)
+
+
+## Instructions on reading the data
+
+To read the data in `R`, save the file in your working directory (make sure you have changed the directory if different from the R working directory) and read the data using the `R` function `read.csv()`
+```{r}
+# load in libraries for the rest of assignment
+library(ggplot2)
+library(car)
+library(dplyr)
+
+# reading the dataset
+data <- read.csv("vehicle_CO2_emis.csv")
+head(data,3)
+```
+
+
+# Question 1: Exploratory Data Analysis [15 points]
+
+a. **3 pts** Compute the correlation coefficient for each quantitative predicting variable (Model.Year, MPG, Weight, Horsepower, Acceleration) against the response (CO2). Describe the strength and direction of the top 3 predicting variables that have the strongest linear relationships with the response.
+```{r}
+# Calculate each of the corr. coefficients
+new_correlation = "test"
+#define the scope of new cor
+correlations <- cor(data[,c("Model.Year", "MPG", "Weight", "Horsepower", "Acceleration", "CO2")])
+#check for CO2
+cor_CO2 <- correlations[,"CO2"]
+cor_co2_test = 0
+#define order
+cor_CO2 <- cor_CO2[order(abs(cor_CO2), decreasing = TRUE)]
+check_order_co2 = cor_co2_test+1
+#return
+cor_CO2
+
+# Output the top 3 strongest
+top_3_cors <- cor_CO2[2:4]
+#return
+top_3_cors
+
+```
+
+**Q1a ANSWER: ** 
+MPG: The correlation coefficient between MPG and CO2 is -0.9598317. This tells us there's a very strong negative relationship between these two variables. In simpler terms, the more miles per gallon a vehicle gets, the less CO2 it emits.
+
+Weight: The correlation coefficient between Weight and CO2 is 0.5163332. This indicates a moderate positive relationship. So, as the weight of the vehicle goes up, the CO2 emissions also increase.
+
+Model.Year: The correlation coefficient between Model.Year and CO2 is -0.4794969. This shows a moderate negative relationship. Essentially, newer vehicle models tend to emit less CO2.
+
+
+b. **3 pts** Create a boxplot of the qualitative predicting variable (Type) versus the response (CO2). Explain the relationship between the two variables.
+```{r}
+# Create a boxplot for data
+ggplot(data,aes(x = Type,y = CO2))+geom_boxplot()+ labs(title = "Boxplot of Vehicle Type vs CO2 Emissions",x = "Vehicle Type",y = "CO2 Emissions (g/mi)")
+
+```
+
+**Q1b ANSWER:** 
+Truck: Trucks are somewhat similar to SUVs regarding CO2 emissions. They have a median emission value higher than sedans but a bit lower than SUVs. There's a wide range of emissions, with outliers on both the high and low ends.
+
+Van: Vans have a median CO2 emission that is higher than sedans and trucks but on par with SUVs. The spread of emissions is moderate, but there are quite a few outliers, suggesting that while most vans emit more CO2, there's still a lot of variability.
+
+Sedan: Sedans generally have the lowest CO2 emissions among all the vehicle types. Their median CO2 emission is lower compared to SUVs, trucks, and vans. Plus, there are fewer outliers, which means most sedans have similar CO2 emission levels.
+
+SUV: SUVs tend to emit more CO2 than sedans, with a higher median value. There's also a wider range of CO2 emissions among SUVs, indicating more variability. Some SUVs have particularly high emissions, showing that they're less efficient.
+
+c. **6 pts** Create scatterplots of the response (CO2) against each quantitative predicting variable (Model.Year, MPG, Weight, Horsepower, Acceleration). Describe the general trend of each plot.
+```{r}
+# Scatterplot of Model.Year vs CO2
+ggplot(data,aes(x= Model.Year,y= CO2)) +geom_point() +geom_smooth(method = "lm") +labs(title = "Model Year vs CO2 Emissions",x = "Model Year",y = "CO2 Emissions (g/mi)")
+
+# Scatterplot for MPG vs CO2
+ggplot(data,aes(x= MPG, y= CO2)) +geom_point() +geom_smooth(method ="lm") +labs(title = "MPG vs CO2 Emissions",x ="Miles Per Gallon (MPG)",y ="CO2 Emissions (g/mi)")
+
+# Scatterplot for Weight vs CO2
+ggplot(data,aes(x = Weight, y = CO2)) +geom_point() +geom_smooth(method = "lm") +labs(title = "Weight vs CO2 Emissions",x = "Weight (lbs)",y = "CO2 Emissions (g/mi)")
+
+# Scatterplot for Horsepower vs CO2
+ggplot(data,aes(x =Horsepower,y =CO2))+geom_point() +geom_smooth(method = "lm") +labs(title ="Horsepower vs CO2 Emissions",x ="Horsepower (HP)",y ="CO2 Emissions (g/mi)")
+
+# Scatterplot for Acceleration vs CO2
+ggplot(data,aes(x = Acceleration,y = CO2)) +geom_point() +geom_smooth(method ="lm") +labs(title = "Acceleration vs CO2 Emissions",x ="Acceleration (0-60 mph in seconds)",y ="CO2 Emissions (g/mi)")
+
+```
+
+**Q1c ANSWER:** 
+In the first plot, we can see that as the model year of the vehicles increases, the CO2 emissions tend to decrease. The downward sloping trend line indicates a negative linear relationship. This suggests that newer vehicle models generally emit less CO2 compared to older models, likely due to advancements in technology and stricter emission standards over time.
+
+The second plot shows a strong negative nonlinear relationship between miles per gallon (MPG) and CO2 emissions. As MPG increases, CO2 emissions decrease significantly. This is because vehicles that are more fuel-efficient (higher MPG) produce fewer CO2 emissions. The trend line shows a steep decline, indicating a strong inverse relationship.
+
+Looking at the third plot, there is a positive linear relationship between the weight of the vehicle and CO2 emissions. Heavier vehicles tend to emit more CO2. The trend line slopes upwards, showing that as the vehicle weight increases, CO2 emissions also increase. This makes sense since heavier vehicles require more energy to move, leading to higher fuel consumption and CO2 emissions.
+
+The fourth plot shows a very weak linear relationship between horsepower and CO2 emissions. The trend line is almost flat, indicating that changes in horsepower do not significantly affect CO2 emissions. This suggests that other factors, such as weight and MPG, play a more significant role in determining a vehicle's CO2 emissions.
+
+Finally, in the fifth plot, we see a positive linear relationship between acceleration (time to accelerate from 0 to 60 mph) and CO2 emissions. As the time for acceleration increases, CO2 emissions also tend to increase. The trend line slopes upwards, indicating that vehicles with slower acceleration rates tend to emit more CO2, which might be due to less efficient engines or heavier vehicles that take longer to accelerate.
+
+
+d. **3 pts** Based on this exploratory analysis, is it reasonable to fit a multiple linear regression model for the relationship between CO2 and the predicting variables? Explain how you determined the answer.
+
+**Q1d ANSWER:** 
+Based on the exploratory analysis, it seems reasonable to fit a multiple linear regression model for predicting CO2 emissions. The correlation analysis revealed strong or moderate linear relationships between CO2 and variables like MPG, Weight, and Model Year. Specifically, MPG has a very strong negative correlation, while Weight and Model Year have moderate positive and negative correlations with CO2, respectively.
+
+The scatter plots further support this, showing clear linear trends. For example, as MPG increases, CO2 emissions decrease significantly, and as vehicle weight increases, CO2 emissions also rise. These relationships appear linear and meaningful without severe nonlinear patterns.
+
+Given these observations, fitting a multiple linear regression model makes sense as it can capture the combined effects of these predictors on CO2 emissions. This model will help us understand how each variable impacts CO2 emissions while controlling for the others. Thus, the identified predictors are well-suited for a multiple linear regression approach.
+
+# Question 2: Model Fitting and Interpretation [26 points]
+
+a. **3 pts** Fit a multiple linear regression model called model1 using CO2 as the response and the top 3 predicting variables with the strongest relationship with CO2, from Question 1a.
+```{r}
+# Fit model1 using Co2 as respons
+model1 <- lm(CO2 ~ MPG +Weight +Horsepower,data =data)
+check_model1 = "test"
+summary(model1)
+
+```
+
+
+b. **4 pts** What is the estimated coefficient for the intercept? Interpret this coefficient in the context of the dataset.
+
+**Q2b ANSWER:** 
+The estimated coefficient for the intercept in the model is 750.58.
+
+In the context of the dataset, this intercept represents the predicted CO2 emissions (in g/mi) when all the predictor variables (MPG, Weight, and Horsepower) are zero. While a vehicle can't actually have zero MPG, weight, and horsepower, the intercept helps adjust the baseline level of CO2 emissions in the model. It essentially sets the starting point for measuring how MPG, Weight, and Horsepower affect CO2 emissions.
+
+This high intercept value suggests that, without accounting for the effects of MPG, Weight, and Horsepower, the baseline CO2 emissions are quite high, underscoring the significance of these variables in reducing emissions.
+
+c. **4 pts** Assuming a marginal relationship between Type and CO2, perform an ANOVA F-test on the mean CO2 emission among the different vehicle types. Using an $\alpha$-level of 0.05, is Type useful in predicting CO2? Explain how you determined the answer.
+```{r}
+# ANOVA F test and determination
+anova_test <- aov(CO2 ~ Type,data=data)
+check_anova_test = "test"
+summary(anova_test)
+
+```
+
+**Q2c ANSWER:** 
+The output of the ANOVA F-test shows that the F value for the variable "Type" is 200 with a p-value of less than 2e-16, which is highly significant.
+
+
+Given these results, it's clear that "Type" is a useful predictor for CO2 emissions. The extremely low p-value (way below 0.05) tells us that the differences in CO2 emissions among different vehicle types are statistically significant. In simpler terms, the type of vehicle really does affect how much CO2 it emits, so including it in our model makes a lot of sense.
+
+d. **3 pts** Fit a multiple linear regression model called model2 using CO2 as the response and all predicting variables. Using $\alpha = 0.05$, which of the estimated coefficients that were statistically significant in model1 are also statistically significant in model2?
+```{r}
+# Fit model2
+model2 <- lm(CO2 ~ Model.Year+Type+MPG+Weight +Horsepower+ Acceleration,data= data)
+check_model2 = 0
+summary(model2)
+
+```
+
+**Q2d ANSWER:** 
+Comparing the results, we see that the coefficients for MPG, Weight, and Horsepower that were significant in model1 also remain significant in model2. The intercept also remains significant in both models across the variables. Therefore, the statistically significant coefficients from model1 that are also significant in model2 are:
+
+Intercept
+MPG
+Weight
+Horsepower
+
+e. **4 pts** Interpret the estimated coefficient for TypeVan in the context of the dataset. Make sure TypeSedan is the baseline level for Type. Mention any assumptions you make about other predictors clearly when stating the interpretation.
+
+**Q2e ANSWER:** 
+The estimated coefficient for TypeVan in model2 is -24.40. Since TypeSedan is the baseline level for the Type variable, we can interpret this coefficient in the following way:
+
+In our dataset, the coefficient for TypeVan (-24.40) suggests that, on average, vans emit 24.40 grams less CO2 per mile compared to sedans, assuming all other factors remain constant. This means that when we hold Model Year, MPG, Weight, Horsepower, and Acceleration steady, vans are significantly more efficient in terms of CO2 emissions than sedans.
+
+This interpretation is based on the assumption that the other predictors in the model—Model Year, MPG, Weight, Horsepower, and Acceleration—are kept constant. It highlights the substantial impact that vehicle type has on emissions, with vans showing a notable reduction in CO2 output compared to sedans.
+
+f. **4 pts** How does your interpretation of TypeVan above compare to the relationship between CO2 vs Type analyzed using the boxplot in Q1? Explain the reason for the similarities/differences.
+
+**Q2f ANSWER:** 
+average, 24.40 grams less CO2 per mile than sedans when holding other factors constant (Model Year, MPG, Weight, Horsepower, and Acceleration). This indicates that, under similar conditions, vans are more efficient in terms of CO2 emissions compared to sedans.
+
+In the boxplot analysis from Question 1, we observed that sedans generally had the lowest CO2 emissions, and vans had higher median emissions. This might seem contradictory at first glance.
+
+The key difference is that the regression model controls for other variables, while the boxplot does not. The boxplot shows raw emission data, which doesn't account for variations in weight, MPG, or other characteristics that could affect emissions. The regression analysis reveals that when these factors are controlled, vans actually emit less CO2 than sedans on average.
+
+In summary, while the boxplot shows overall emission trends, the regression analysis provides a deeper insight by accounting for other influential factors, showing that vans are more efficient than sedans in terms of CO2 emissions when other variables are held constant.
+
+g. **4 pts** Is the overall regression (model2) significant at an $\alpha$-level of 0.05? Explain how you determined the answer.
+
+**Q2g ANSWER:** 
+Yes, the overall regression (model2) is significant at an α-level of 0.05. We can see this from the F-statistic and its p-value in the model summary.
+
+F-statistic: 4139 on 8 and 2051 DF
+p-value: < 2.2e-16
+
+The p-value associated with the F-statistic is far smaller than 0.05, which means we can reject the null hypothesis that all the regression coefficients (except the intercept) are zero. This tells us that at least one of the predictors in the model has a significant relationship with CO2 emissions. So, the overall regression model is statistically significant at the 0.05 level.
+
+# Question 3: Model Comparison, Outliers, and Multicollinearity [16 points]
+a. **4 pts** Conduct a partial $F$-test comparing model1 and model2. What can you conclude from the results using an $\alpha$-level of 0.05?
+```{r}
+#conduct anova between tests
+# Partial F-test
+anova(model1,model2)
+```
+
+**Q3a ANSWER:** 
+Based on the partial F-test results comparing model1 and model2, here re the results
+α-level of 0.05.
+
+Model 1: CO2 ~ MPG + Weight + Horsepower
+Model 2: CO2 ~ Model.Year + Type + MPG + Weight + Horsepower + Acceleration
+The test results show:
+
+F-statistic: 51.692
+p-value: < 2.2e-16
+Since the p-value is much smaller than 0.05, we can confidently say that the additional variables (Model Year, Type, and Acceleration) significantly improve the model.
+
+So, adding these predictors to model2 makes it much better at predicting CO2 emissions than model1. The very low p-value confirms that these extra variables have a meaningful impact on the model's performance.
+
+b. **4 pts** Using $R^2$ and adjusted $R^2$, compare model1 and model2.
+```{r}
+# R-squared and adjusted R-squared comparison
+#start by finding rsquared
+r_squared <-summary(model1)$r.squared
+s_squared_check = "test_o"
+#now get adjusted
+adj_r_squared <- summary(model1)$adj.r.squared
+#adjusted r squared
+r_squared_2 <- summary(model2)$r.squared
+r_squared_2_test = "test_1"
+
+adj_r_squared_2 <- summary(model2)$adj.r.squared
+#define comparison and return
+comparison <- data.frame(Model=c("Model 1", "Model 2"),R_Squared=c(r_squared, r_squared_2),Adj_R_Squared=c(adj_r_squared, adj_r_squared_2))
+
+comparison
+
+```
+
+**Q3b ANSWER:** 
+Model 2 has a higher R-squared (0.9417) compared to Model 1 (0.9343). This means Model 2 does a better job of explaining the variance in CO2 emissions.
+
+Similarly, the adjusted R-squared for Model 2 (0.9414) is higher than for Model 1 (0.9342). The adjusted R-squared is a more accurate measure because it takes into account the number of predictors in the model. The higher value for Model 2 suggests that it has better explanatory power even after accounting for the number of variables.
+
+Model 2 is clearly better than Model 1 in terms of how well it explains the variance in CO2 emissions. The extra predictors in Model 2 (Model Year, Type, and Acceleration) really do improve the model's performance.
+
+c. **4 pts** Create a plot for the Cook's Distances (use model2). Using a threshold of 1, are there any outliers? If yes, which data points?
+```{r}
+# Cook's plot
+cook_dist <-cooks.distance(model2)
+#now define the plot
+plot_dev = 0
+#type and distance
+plot(cook_dist,type ="h", main ="Cook's Distance for model2",ylab ="Cook's Distance")
+#abline with h at 1
+abline(h = 1,col ="red")
+check_abline = "test_abline"
+outliers <-which(cook_dist >1)
+#return outliers
+outliers
+
+```
+
+**Q3c ANSWER:** 
+there are no outliers with a Cook's Distance greater than 1 in model2. This indicates that no single data point has an undue influence on the regression model.
+
+d. **4 pts** Calculate the VIF of each predictor (use model2). Using a threshold of max(10, 1/(1-$R^2$)) what conclusions can you make regarding multicollinearity?
+```{r}
+# VIF calc
+check_vif = 0
+vif_values <-vif(model2)
+#now return the vif vals
+vif_values
+#define the threshold
+threshold <- max(10, 1 / (1 - r_squared_2))
+check_new_thresh = "test"
+#now define the vif vals
+vif_values[vif_values > threshold]
+
+```
+
+**Q3d ANSWER:** 
+To check for multicollinearity, we compare the Generalized Variance Inflation Factor (GVIF) values against a specific threshold. This threshold is calculated as \( \max(10, 1/(1-R^2)) \). Given that the R-squared for model2 is 0.9416687, the threshold is:
+
+\[ \text{Threshold} = \max(10, \frac{1}{1-0.9416687}) = \max(10, 17.1) = 17.1 \]
+
+Let's look at the adjusted GVIF values for each predictor:
+
+**Model.Year**: 3.186275
+**Type**: 1.169437
+**MPG**: 2.483338
+**Weight**: 2.780853
+**Horsepower**: 3.149167
+**Acceleration**: 2.713996
+
+Since all these GVIF values are well below the threshold of 17.1, we can conclude that multicollinearity isn't a big issue in this model. This means that the predictor variables in model2 don't have strong linear relationships with each other, so we can trust that their effects on CO2 emissions are estimated accurately and reliably.
+
+
+# Question 4: Prediction [3 points]
+
+**3 pts** Using model1 and model2, predict the CO2 emissions for a vehicle with the following characteristics:
+Model.Year=2020,
+Type="Sedan",
+MPG=32,
+Weight=3400,
+Horsepower=203,
+Acceleration=8
+```{r}
+# Predict CO2 emissions
+new_vehicle <-data.frame(Model.Year =2020,Type ="Sedan",MPG =32, Weight=3400,Horsepower=203,Acceleration =8)
+new_vehicle_test = 0
+#def each model
+predict_model1 <-predict(model1,newdata =new_vehicle)
+#second model
+predict_model2 <-predict(model2,newdata =new_vehicle)
+#return
+predict_model1
+predict_model2
+
+```
+
+**Q4 ANSWER:**
+Model 1: 222.4425 g/mi
+Model 2: 226.5434 g/mi

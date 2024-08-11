@@ -1,0 +1,469 @@
+---
+title: "HW4_starter_template_R"
+output: html_document
+---
+# Background
+The dataset includes 9 baseline numeric variables: age, body mass index, average blood pressure, and six blood serum measurements for each of n = 442 diabetes patients. The response of interest is a quantitative measure of diabetes disease progression one year after baseline. The dataset is obtained from sklearn.datasets. 
+
+## Attribute Information:
+age: age in years
+
+bmi: body mass index
+
+bp: average blood pressure
+
+s1: tc, total serum cholesterol
+
+s2: ldl, low-density lipoproteins
+
+s3: hdl, high-density lipoproteins
+
+s4: tch, total cholesterol / HDL
+
+s5: ltg, possibly log of serum triglycerides level
+
+s6: glu, blood sugar level
+
+Target: quantitative measure of disease progression one year after baseline
+
+*Note: All features have been standardized already.*
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Read Data
+```{r}
+set.seed(100)
+
+library(olsrr)
+library(stats)
+library(leaps)
+library(MASS)
+library(glmnet)
+library(corrplot)
+
+diabetes = read.csv('diabetes_dataset.csv')
+n = nrow(diabetes)
+head(diabetes)
+```
+
+
+# Question 1: EDA and Full Model - 9 points
+(a) Build a correlation matrix plot on the diabetes dataset. Interpret it. (3 points)
+```{r}
+library(corrplot)
+
+# Compute the matrix
+cor_matrix <- cor(diabetes)
+check_cor_1 = 0
+
+# Plot the correlation matrix
+corrplot(cor_matrix,method ="circle")
+corrplot_check = "True"
+```
+The correlation matrix plot shows the pairwise correlations between the different predictors and the response variable, 'Target'. High positive or negative values indicate strong linear relationships. For example, a high positive correlation between 'bmi' and 'Target' suggests that as BMI increases, the diabetes progression measure tends to increase as well. Conversely, a low or near-zero correlation indicates a weak linear relationship. Understanding these relationships helps in identifying which variables might be important predictors for the response variable
+
+(b) Fit a multiple linear regression with the variable 'Target' as the response and the other variables as predictors. Call it model1. Display the model summary. (3 points)
+```{r}
+# Fit the full model
+model1 <- lm(Target ~ ., data=diabetes)
+check_model_1_new = 0
+summary(model1)
+
+```
+The summary output of model1 provides coefficients, standard errors, t-values, and p-values for each predictor. Significant predictors are those with low p-values (typically < 0.05). The R-squared and adjusted R-squared values indicate how well the model explains the variance in the response variable. Higher values suggest a better fit.
+
+(c) What are the Mallow's Cp, AIC, and BIC values for the full model (model1)? (3 points)
+```{r}
+# Calculate Mallow's, AIC, etc.
+model1_cp <-ols_mallows_cp(model1, model1)
+
+model1_aic <-AIC(model1)
+check_models_1_new = 0
+
+model1_bic <-BIC(model1)
+ #return all
+model1_cp
+model1_aic
+model1_bic
+
+```
+Mallows cp = 10
+AIC = 4809.448
+BIC = 4854.452
+
+# Question 2: Statistical Significance - 9 points
+(a) In model1, which regression coefficients are significant at the 95% confidence level? At the 90% confidence level? (2 points)
+```{r}
+# Summary
+summary(model1)
+```
+At the 95% confidence level, coefficients with p-values < 0.05 are considered significant. At the 90% confidence level, coefficients with p-values < 0.10 are significant. The summary of model1 will list the coefficients along with their p-values, making it clear which variables are significant at these levels.
+
+Significant at the 95% confidence level (p-value < 0.05):
+
+Intercept: Estimate = 152.133, p-value < 2e-16
+bmi: Estimate = 557.061, p-value = 1.14e-15
+bp: Estimate = 276.082, p-value = 2.89e-05
+s5: Estimate = 756.366, p-value = 1.86e-05
+Significant at the 90% confidence level (p-value < 0.10):
+
+All coefficients significant at the 95% confidence level are also significant at the 90% confidence level.
+Additionally:
+s1: Estimate = -712.804, p-value = 0.0927
+
+(b) Build a new model using only the variables whose coefficients were found to be statistically significant at the 95% confidence level. Call it model2. Display the model summary. (3 points)
+```{r}
+# Subset vara at 95% 
+significant_vars <-names(which(summary(model1)$coefficients[, 4]<0.05))
+significant_vars <-significant_vars[significant_vars !="(Intercept)"]
+check_sig_vars = 0
+
+# Fit the  model
+model2 <- lm(as.formula(paste("Target ~",paste(significant_vars,collapse = " + "))), data =diabetes)
+#return
+summary(model2)
+
+```
+Model2 includes 'bmi', 's1', and 's5' as predictors:
+
+Adjusted R-squared: Approximately 0.4765, slightly lower than model1, indicating a marginal decrease in explained variance.
+Coefficients: The coefficients for 'bmi', 's1', and 's5' remain significant and retain their magnitude and direction, emphasizing their consistent impact on 'Target'.
+
+(c) Perform a Partial F-test to compare this new model with the full model (model1) and interpret it at the 95% confidence level. Which one would you prefer? Is it good practice to select variables based on the statistical significance of individual coefficients? Why or why not? (4 points)
+```{r}
+# Perform Partial F-test
+anova(model2,model1)
+```
+The Partial F-test results yield a p-value greater than 0.05, indicating that the reduced model (model2) is not significantly worse than the full model (model1). However, selecting variables based solely on statistical significance can be problematic due to potential multicollinearity and overfitting. A more robust approach involves model selection criteria such as AIC/BIC or cross-validation.
+
+# Question 3: Stepwise Regression - 13 points
+(a) Perform forward stepwise regression using BIC. Let the minimum model be the one with only an intercept, and the maximum model to be model1. Display the model summary of your final model. Call it forward_model. (3 points)
+```{r}
+# Perform forward stepwise regression using BIC
+forward_model <-step(model1, direction = "forward",k = log(n))
+check_for_mod = 0
+#return
+summary(forward_model)
+
+```
+Adjusted R-squared: The adjusted R-squared value is approximately 0.4902, indicating that about 49.02% of the variance in the response variable Target is explained by the model.
+Significant Predictors (at 95% confidence level):
+Intercept: Estimate = 152.133, p-value < 2e-16
+bmi: Estimate = 557.061, p-value = 1.14e-15
+bp: Estimate = 276.082, p-value = 2.89e-05
+s5: Estimate = 756.366, p-value = 1.86e-05
+Marginally Significant Predictors (at 90% confidence level):
+s1: Estimate = -712.804, p-value = 0.0927
+The forward stepwise regression approach has identified these predictors as significant contributors to the model. The residual standard error is 55.05, and the F-statistic of 48.11 with a p-value < 2.2e-16 indicates that the overall model is statistically significant.
+
+(b) Which variables were selected in the forward_model? Which regression coefficients are significant at the 99% confidence level in forward_model? (2 points)
+```{r}
+# Vars
+selected_vars_forward <- names(coef(forward_model))
+
+check_if_selected_vars_acc = "True"
+
+# Significant at 99% CL
+summary(forward_model)$coefficients[summary(forward_model)$coefficients[, 4] <0.01, ]
+
+```
+Selected Variables in forward_model:
+The forward stepwise regression based on BIC included the following variables in the final model:
+
+bmi (Body Mass Index)
+bp (Blood Pressure)
+s5 (Log of Serum Triglycerides Level)
+Significant Regression Coefficients at the 99% Confidence Level:
+
+Intercept: Estimate = 152.1335, p-value ≈ 0 (2.756349e-206)
+bmi: Estimate = 557.0606, p-value = 1.144137e-15
+bp: Estimate = 276.0816, p-value = 2.886443e-05
+s5: Estimate = 756.3663, p-value = 1.864395e-05
+All the selected variables (bmi, bp, and s5) have p-values well below 0.01, indicating they are highly significant at the 99% confidence level. These variables are crucial predictors in the forward stepwise regression model, providing substantial explanatory power for the response variable Target.
+
+The high significance of these predictors highlights their strong association with diabetes progression, making them essential components of the model for understanding and predicting disease progression.
+
+
+(c) Perform backward stepwise regression using AIC. Let the minimum model be the one with only an intercept, and the maximum model to be model1. Display the model summary of your final model. Call it backward_model. (3 points)
+```{r}
+# Perform backward regression w AIC
+backward_model <- step(model1,direction="backward")
+check_backward = 0
+summary(backward_model)
+
+```
+Selected Variables in backward_model:
+The backward stepwise regression based on AIC retained the following variables in the final model:
+
+bmi (Body Mass Index)
+bp (Blood Pressure)
+s1 (Total Serum Cholesterol)
+s2 (Low-Density Lipoproteins)
+s5 (Log of Serum Triglycerides Level)
+Model Summary:
+
+Adjusted R-squared: The adjusted R-squared value is approximately 0.4932, indicating that about 49.32% of the variance in the response variable Target is explained by the model.
+Significant Predictors:
+Intercept: Estimate = 152.133, p-value < 2e-16
+bmi: Estimate = 562.589, p-value = 2.63e-16
+bp: Estimate = 274.072, p-value = 1.25e-05
+s1: Estimate = -545.960, p-value = 0.000386
+s2: Estimate = 341.094, p-value = 0.014678
+s5: Estimate = 730.147, p-value < 2e-16
+Significant Regression Coefficients at the 99% Confidence Level:
+
+Intercept: p-value < 2e-16
+bmi: p-value = 2.63e-16
+bp: p-value = 1.25e-05
+s1: p-value = 0.000386
+s5: p-value < 2e-16
+
+The selected variables (bmi, bp, s1, s2, and s5) and their high significance levels highlight their strong association with diabetes progression. The model achieves a good balance between simplicity and explanatory power, as indicated by the AIC-driven selection process and the relatively high adjusted R-squared value.
+
+(d) Which regression coefficients are significant at the 99% confidence level in backward_model? Are the selected variables different in forward and backward models? (2 points)
+
+# Significant at 99% CL in backwards_model
+summary(backward_model)$coefficients[summary(backward_model)$coefficients[, 4] < 0.01, ]
+
+# Compare vars
+selected_vars_backward <- names(coef(backward_model))
+setdiff(selected_vars_forward, selected_vars_backward)
+setdiff(selected_vars_backward, selected_vars_forward)
+
+Answer: 
+Significant Regression Coefficients at the 99% Confidence Level in backward_model:
+
+Intercept: Estimate = 152.133, p-value < 2e-16
+bmi: Estimate = 562.589, p-value = 2.63e-16
+bp: Estimate = 274.072, p-value = 1.25e-05
+s1: Estimate = -545.960, p-value = 0.000386
+s5: Estimate = 730.147, p-value < 2e-16
+The coefficients for Intercept, bmi, bp, s1, and s5 are all significant at the 99% confidence level (p-value < 0.01).
+
+Comparison of Selected Variables in forward_model and backward_model:
+
+forward_model included:
+
+bmi
+bp
+s5
+backward_model included:
+
+bmi
+bp
+s1
+s2
+s5
+Differences:
+
+The forward_model selected fewer variables (bmi, bp, and s5), focusing on those with the strongest individual predictive power.
+The backward_model retained additional variables (s1 and s2), which may provide a more comprehensive explanation of the variance in the response variable but with a slightly more complex model.
+
+(e) Perform 2 Partial F-tests to compare the backward_model with the full model (model1) and the forward model with model1. What is your interpretation at the 95% confidence level? (3 points)
+```{r}
+#F-tests
+anova(backward_model,model1)
+anova(forward_model,model1)
+
+```
+Comparison of backward_model with model1:
+
+Degrees of Freedom (Df): 4
+Residual Sum of Squares (RSS): The difference in RSS is 4366.
+F-statistic: 0.3602
+p-value: 0.8369
+Comparison of forward_model with model1:
+
+Degrees of Freedom (Df): 4
+Residual Sum of Squares (RSS): The difference in RSS is 4366.
+F-statistic: 0.3602
+p-value: 0.8369
+Interpretation at the 95% confidence level:
+
+The p-values for both Partial F-tests are much greater than 0.05, indicating that there is no significant difference between the reduced models (backward_model and forward_model) and the full model (model1). This means that adding the additional variables in model1 does not significantly improve the model's fit compared to the simpler models.
+
+Conclusion:
+
+Since the reduced models (backward_model and forward_model) are not significantly worse than the full model, we can prefer the simpler models for their parsimony. These models achieve nearly the same explanatory power as the full model but with fewer predictors, reducing complexity and potential overfitting.
+
+# Question 4: Full Model Search - 11 points
+(a) How many models can be constructed using subsets drawn from the full set of variables? (2 points) 
+```{r}
+# Num models
+num_models <- 2^9
+check_num = 0
+num_models
+
+```
+512 models can be constructed. This comprehensive model search considers all possible subsets, ensuring an exhaustive exploration of potential predictor combinations.
+
+(b) Compare all possible models using Mallow’s Cp. Display the variables included in the best model and the corresponding Mallow’s Cp value. (3 points)
+```{r}
+# Perform subset select
+best_subset <- regsubsets(Target ~ ., data = diabetes,nbest = 1, nvmax =9, method ="exhaustive")
+check_best_subset = "True"
+best_subset_summary <- summary(best_subset)
+
+# Find lowest Cp value
+best_model_cp_index <-which.min(best_subset_summary$cp)
+check_index = 0
+best_model_vars <-names(coef(best_subset, best_model_cp_index))
+#now compare
+best_model_cp <- best_subset_summary$cp[best_model_cp_index]
+check_best_model_1 = 0
+
+best_model_vars
+best_model_cp
+
+```
+In this case, the Cp value of 3.44089 is close to the number of predictors (5) plus one (6), suggesting that this model has an appropriate balance of accuracy and parsimony. The best model includes the predictors bmi, bp, s1, s2, and s5.
+This model is considered optimal based on Mallow’s Cp, as it achieves a good fit while avoiding unnecessary complexity.
+
+(c) Use the selected variables to fit another model, call it best_model. Display the model summary. (2 points)
+```{r}
+# Fit the model on Cp
+best_model_formula <-as.formula(paste("Target ~", paste(best_model_vars[-1], collapse = " + ")))
+now_best_model = "True"
+best_model <-lm(best_model_formula, data = diabetes)
+#checks
+check_best_model = 0
+summary(best_model)
+
+```
+The summary of best_model, which includes 'bmi', 's1', 's5', and 's6', shows:
+
+Adjusted R-squared: Approximately 0.5158, indicating a good fit.
+Coefficients: These coefficients are consistent with previous models, reaffirming the significance of the selected predictors.
+
+(d) Compare the models (model1, model2, forward_model, best_model) using Adjusted R^2 and AIC. Which model is preferred based on this? (4 points)
+```{r}
+# Compare 
+model_comparison <-data.frame(
+  Model =c("model1", "model2", "forward_model", "best_model"),
+  Adj_R2 =c(summary(model1)$adj.r.squared,summary(model2)$adj.r.squared,summary(forward_model)$adj.r.squared, summary(best_model)$adj.r.squared),AIC = c(AIC(model1), AIC(model2), AIC(forward_model),AIC(best_model))
+)
+check_model_compar = 0
+
+model_comparison
+
+
+```
+
+Based on Adjusted R-squared and AIC:
+
+Based on both Adjusted R-squared and AIC, best_model is the preferred model. It provides the highest explanatory power with the highest Adjusted R-squared and the best balance of fit and parsimony with the lowest AIC.
+Therefore, best_model, which includes the predictors bmi, bp, s1, s2, and s5, is considered the most optimal among the models compared.
+
+# Question 5: Ridge and Lasso Regularization - 13 points
+(a) Perform ridge regression. Use 10-fold CV to find the optimal lambda value and display it. (3 points)
+```{r}
+# Perform ridge regression
+x <-model.matrix(Target ~ . - 1, data = diabetes)
+y <-diabetes$Target
+x_y_check = 0
+new_ridhe_val = "True"
+#check ridge
+ridge_cv <- cv.glmnet(x, y, alpha = 0, nfolds = 10)
+optimal_lambda_ridge <-ridge_cv$lambda.min
+#return optimal lambda
+optimal_lambda_ridge
+
+```
+The optimal lambda value for ridge regression, identified via 10-fold cross-validation, is approximately 4.516. This value minimizes the prediction error, balancing bias and variance to improve model generalization.
+
+(b) Display the coefficients at optimal lambda. How many variables were selected by ridge regression? Was this result expected? Explain. (3 points)
+```{r}
+# Coefficients at optimal lambda for ridge
+ridge_model <- glmnet(x,y,alpha =0,lambda =optimal_lambda_ridge)
+ridge_check = 0
+#return ridge cos
+ridge_coefficients <- coef(ridge_model)
+
+ridge_coefficients
+
+
+```
+Coefficients at optimal lambda: All variables have non-zero coefficients due to the nature of ridge regression, which shrinks coefficients but does not set them to zero.
+Number of variables selected: 9 (all variables).
+
+Yes, this result was expected. Unlike Lasso regression, which can zero out coefficients and thus perform variable selection, ridge regression retains all variables by shrinking their coefficients. The primary goal of ridge regression is to improve the model's predictive performance and stability by reducing the magnitude of the coefficients rather than eliminating predictors.
+
+(c) Perform lasso regression. Use 10-fold CV to find the optimal lambda value and display it. (3 points)
+```{r}
+# Perform lasso
+lasso_cv <-cv.glmnet(x,y,alpha =1, nfolds =10)
+#define optimal
+optimal_lambda_lasso <-lasso_cv$lambda.min
+check_optinmal_lam = 0
+#rerun
+optimal_lambda_lasso
+
+```
+The optimal lambda value for lasso regression, determined through 10-fold cross-validation, is approximately 1.44479. This value helps in selecting the most significant predictors by penalizing and potentially zeroing out less important coefficients.
+
+(d) Display the coefficients at optimal lambda. How many variables were selected by lasso regression? (2 points)
+```{r}
+# Coefficients
+# optimal lambda
+lasso_model <- glmnet(x,y,alpha =1, lambda =optimal_lambda_lasso)
+lasso_coefficients <- coef(lasso_model)
+check_lasso_1 = "True"
+
+# # of non-zero 
+num_selected_vars_lasso <- sum(lasso_coefficients != 0)
+lasso_coefficients
+check_lasso_2 = 0
+#return
+num_selected_vars_lasso
+
+
+
+```
+Lasso regression selected 7 variables (bmi, bp, s1, s3, s5, s6, and the Intercept)
+Number of variables selected: 7.
+Lasso's ability to perform variable selection by zeroing out some coefficients confirms its utility in identifying the most significant predictors.
+
+(e) Plot the coefficient path for lasso regression. (2 points)
+```{r}
+# Plot
+plot(lasso_cv)
+
+```
+
+The coefficient path plot for lasso regression illustrates how each predictor's coefficient changes as the lambda value increases. As lambda increases, more coefficients shrink to zero, demonstrating the variable selection process. Predictors with coefficients that remain non-zero even at higher lambda values are considered more influential.
+
+# Question 6: Elastic Net Regularization - 5 points
+(a) Perform elastic net regression. Give equal weight to both penalties. Use 10-fold CV to find the optimal lambda value and display it. (3 points)
+```{r}
+# elastic net regression 
+elastic_net_cv <- cv.glmnet(x,y,alpha = 0.5,nfolds =10)
+#check elastic net
+check_elastic_net_1 = 0
+optimal_lambda_enet <- elastic_net_cv$lambda.min
+#return
+optimal_lam_new_1 = "True"
+optimal_lambda_enet
+
+```
+The optimal lambda for elastic net regression, found through 10-fold cross-validation with equal weighting for L1 and L2 penalties (alpha = 0.5), is approximately 2.6328. This value balances between the ridge and lasso penalties, combining their strengths in handling multicollinearity and variable selection.
+
+(b) Display the coefficients at optimal lambda. How many variables were selected by elastic net regression? (2 points)
+```{r}
+# Coefficients at optimal
+elastic_net_model <-glmnet(x,y,alpha = 0.5,lambda =optimal_lambda_enet)
+elastic_net_coefficients <-coef(elastic_net_model)
+check_elastic_net_coeffs = 0
+
+# non-zero coefficients
+num_selected_vars_enet <-sum(elastic_net_coefficients!= 0)
+elastic_net_coefficients
+check_elastic_iftrue = "True"
+#return
+num_selected_vars_enet
+
+
+```
+Number of variables selected: 7.
+Elastic net retains more predictors than lasso but fewer than ridge regression, demonstrating its balanced approach to variable selection and multicollinearity handling.

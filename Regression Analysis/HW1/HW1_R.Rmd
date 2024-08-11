@@ -1,0 +1,233 @@
+---
+title: "HW1 Peer Assessment"
+output:
+html_document:
+df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Part A. Variables
+In the field of psychology, much research is done using self-report surveys using Likert scales (look it up!).
+
+### A1
+__What type of variable is a Likert response?__ (1 pt)
+Answer: A Likert response displays ordered categories and as such it is a ordinal variable
+### A2
+__What are some (at least 2) benefits of using Likert scales?__ (2 pts)
+Answer: One benefit is that it provides a wide variety of responses which allows for different opinions. Another is that it is realtively easy to build and then deploy in the field
+### A3
+__What are some drawbacks — and dangers — of using them? Make sure you mention at least one 'drawback' and one 'danger' (a 'drawback' is a shortcoming, while a 'danger' implies potential harm).__ (2 pts)
+Answer: A Drawback is that the responses can have a tendency bias which focuses on the middle or average answer since some respondents might avoid choosing an answer on the extreme. A danger is if you were to misinterpret some data that is ordinal instead as interval which would affect your analysis
+
+# Part B. Simple Linear Regression
+
+Perform linear regressions on a dataset from a European Toyota car dealer on the sales records of used cars (Toyota Corolla). We would like to construct a reasonable linear regression model for the relationship between the sales prices of used cars and various explanatory variables (such as age, mileage, horsepower). We are interested to see what factors affect the sales price of a used car and by how much.
+
+Data Description
+
+*Id*        - ID number of each used car 
+*Model*     - Model name of each used car 
+*Price*     - The price (in Euros) at which each used car was sold 
+*Age*       - Age (in months) of each used car as of August 2004 
+*KM*        - Accumulated kilometers on odometer 
+*HP*        - Horsepower 
+*Metallic*  - Metallic color? (Yes = 1, No = 0) 
+*Automatic* - Automatic transmission? ( Yes = 1, No = 0) 
+*CC*        - Cylinder volume (in cubic centimeters) 
+*Doors*     - Number of doors 
+*Gears*     - Number of gears 
+*Weight*    - Weight (in kilograms)
+
+The data is in the file "UsedCars.csv". To read the data in `R`, save the file in your working directory (make sure you have changed the directory if different from the R working directory) and read the data using the `R` function `read.csv()`.
+
+Read data and show few rows of data.
+
+```{r}
+# Read in the data
+used_cars <- read.csv("C:/Users/yoges/OneDrive/Documents/ISYE 6414/HW1/UsedCars.csv", sep = ",", header = TRUE)
+# Show the first few rows of data
+head(used_cars, 3)
+```
+
+## Question B1: Exploratory Data Analysis
+
+a.  **3 pts** Use a scatter plot to describe the relationship between Price and the Accumulated kilometers on odometer. Describe the general trend (direction and form). Include plots and R-code used.
+
+```{r}
+# first import the proper library
+library(ggplot2)
+#function for plot
+ggplot(used_cars,aes(x=KM, y=Price)) +
+  #bring in each of the variables
+  geom_point(color = 'red', alpha = 0.7) +
+  #define what the points and lines will look like
+  geom_smooth(method = 'lm', col = 'gold') +
+  #build the final graph of the regression
+  labs(title = "Scatter Plot of Price (Euro) vs. KM",x ="Kilometers (KM)",y ="Price (Euros)")+ theme_minimal()
+
+
+```
+As we can see there is a negative correlation between Price (Euros) and Kilometers (KM) since as KM increases the price decreases.
+
+b.  **3 pts** What is the value of the correlation coefficient between *Price* and *KM*? Please interpret the strength of the correlation based on the correlation coefficient.
+
+```{r}
+#define the correlation 
+correlation <- cor(used_cars$Price,used_cars$KM)
+#call the fucntion
+correlation
+
+```
+The -.618 correlation coefficient is a moderately strong negative correlation. If the coefficient was higher than .8 then we would consider it very strong, however this falls in a range one band below.  
+
+c.  **2 pts** Based on this exploratory analysis, would you recommend a simple linear regression model for the relationship?
+
+Answer: A straightforward linear regression model would be a suitable way to characterize the relationship between Price and KM given the somewhat high negative correlation and linear trend seen in the scatter plot.
+
+d.  **1 pts** Based on the analysis above, would you pursue a transformation of the data? *Do not transform the data.*
+
+No, it doesn't appear like a transformation is required because the association is linear and should be confirmed by looking at the residuals from the linear regression model first.
+
+## Question B2: Fitting the Simple Linear Regression Model
+
+Fit a linear regression model, named *model_1*, to evaluate the relationship between UsedCars Price and the accumulated KM. *Do not transform the data.* The function you should use in R is:
+
+```{r}
+# Need to define the model
+model_1 <- lm(Price ~ KM,data =used_cars)
+#define the var and then use a function on on it
+summary(model_1)
+
+
+
+```
+
+a.  **3 pts** What are the model parameters and what are their estimates?
+Answer:
+These are are the two model parameters:
+Intercept (β0): 14940
+Slope (β1): -0.06817
+
+b.  **2 pts** Write down the estimated simple linear regression equation.
+
+Answer: Price = 14940 + (−0.06817) × KM
+
+c.  **2 pts** Interpret the estimated value of the $\beta_1$ parameter in the context of the problem.
+
+Answer: The β1 parameter has an est. value of -0.06817 which indicates that the price of the used car drops by roughly 0.06817 Euros for every additional kilometer on the odometer.
+
+d.  **2 pts** Find a 95% confidence interval for the $\beta_1$ parameter. Is $\beta_1$ statistically significant at this level?
+
+```{r}
+# using a 95% Confidence int
+confint(model_1, 'KM',level =0.95)
+
+```
+Answer: For the $\beta_1$ parameter, the 95% confidence interval is (-0.07296, -0.06339) and since $\beta_1$ is not included in the interval, it is statistically significant at the 0.05 level. We can say then that price of used cars and their kilometers (KM) are significantly correlated.
+
+e.  **2 pts** Is $\beta_1$ statistically significantly negative at an $\alpha$-level of 0.01? What is the approximate p-value of this test?
+
+```{r}
+# find the p value of the slope
+summary(model_1)$coefficients['KM', 'Pr(>|t|)']
+#the eval significance
+
+```
+Answer: For the slope, the p-val is less than 2.2e-16 which means that at the α = 0.01 level, β1 is statistically significantly negative because the p-value is less than 0.01.
+
+## Question B3: Checking the Assumptions of the Model
+
+Create and interpret the following graphs with respect to the assumptions of the linear regression model. In other words, comment on whether there are any apparent departures from the assumptions of the linear regression model. Make sure that you state the model assumptions and assess each one. Each graph may be used to assess one or more model assumptions.
+
+a.  **3 pts** Scatterplot of the data with *KM* on the x-axis and *Price* on the y-axis. Make sure you include a line showing the overall trend of the scatterplot
+
+```{r}
+# Scatter plot bring in the function
+checkreside_1 = 0
+ggplot(used_cars, aes(x =KM,y =Price)) +
+  #def each point color
+  geom_point(color = 'red', alpha = 0.65) +
+  #def the line color
+  geom_smooth(method = 'lm', col = 'gold') +
+  #now build the graph
+  labs(title = "Scatter Plot of Price vs. KM",x = "Kilometers (KM)",y = "Price (Euros)") + theme_minimal()
+
+
+
+```
+
+b.  **4 pts** Residual plot - a plot of the residuals, $\hat\epsilon_i$, versus the fitted values, $\hat{y}_i$. Make sure you include a line showing the ideal baseline (hint: residual = 0) that serves as the comparison
+
+```{r}
+# define the residual plot conditions with residual base at 0
+check_resid = 0
+ggplot(model_1,aes(.fitted, .resid)) +
+  #after that define each the alpha threshold and the colors of the lines
+  geom_point(color = 'red', alpha = 0.65) +geom_hline(yintercept = 0, col = 'gold') +
+  #build the final graph with the baseline
+  labs(title = "Residual Plot",x = "Fitted Values",y = "Residuals") +theme_minimal()
+
+
+```
+The  plot demonstrates shows the residuals dispersed randomly about the horizontal, proving that the constant variance and linearity assumptions are met.
+
+c.  **4 pts** Histogram and q-q plot of the residuals. Make sure you include a line in the q-q showing the ideal baseline that serves as the comparison in a q-q plot
+
+```{r}
+# Histogram with the residuals
+#define the plot
+check_1 = 0
+ggplot(model_1,aes(.resid)) +
+  #now each band on the histo
+  geom_histogram(binwidth =500,fill ='red',alpha = 0.65) +
+  #build the graph
+  labs(title = "Histogram of Residuals",x = "Residuals",y = "Frequency") + theme_minimal()
+
+# Q-Q plot using residuals
+check_2 = 0
+#define the first norm
+qqnorm(resid(model_1))
+#now each column defined
+qqline(resid(model_1), col = 'gold')
+
+
+
+```
+The residuals' show an approximate normal distribution, as evidenced by the histogram. The residuals' straight line behavior on the Q-Q plot adds more evidence that they are regularly distributed.
+
+## Question B4: Prediction
+
+Use the results from both model_1 to discuss the effects of KM on the dependent variable: Holding everything else equal, how much the sales price would decrease if a car accumulated 10,000 more kilometers? What observations can you make about the result in the context of the problem? (3 pts)
+
+```{r}
+# What does an additional 10,000 km do to price
+decrease_in_price <- 10000 *coef(model_1)[2]
+#def and call func
+check_decrease = 0 #just a qual check 
+decrease_in_price
+
+
+```
+If an car gained 10,000 km, the sales price would drop by around 681.755 Euros. This finding indicates that purchasers regard cars with lower mileage better and highlights the detrimental effect of mileage on the price.
+
+# Part C. Experiment!
+
+You work for the National Park Service (NPS), and you absolutely love bears. Describe an imaginary (it can be realistic) scenario in which you get to run a one-way ANOVA on a few (3+) species of bears.
+
+### Part C1
+__What are you comparing (name the variable!)? What do you hope to learn from ANOVA?__ (2 pts)
+Answer: The average weight of three different bear species—Grizzly, Polar, and Black—is being compared. I want to find out if there are statistically significant variations in the average weights of these species using an ANOVA
+
+### Part C2
+__Imagine that the results are "mixed", meaning you can draw some conclusions and not others. Describe your conclusions and make sure you detail, with reference to your ANOVA, why the results were "mixed."__ (3 pts)
+Answer: The findings of the ANOVA would show that a statistically significant difference in average weight between Polar and Grizzly bears, but not between Black or Grizzly bears. The results imply that although certain species exhibit some identifiable variations in weight, others do not. These inconsistent outcomes could be caused by a potential overlap in weight ranges and also by within species diversity.
+
+### Part C3
+__Now imagine that you have just been granted 3 months and $50,000 to continue this study (you're a great grant writer and a very likable member of the NPS!). Describe some next steps you would take to clarify, reinforce and/or further explore your nascent investigation. You MUST reference using a 'controlling' variable somehow in your response.__ (5 pts)
+Answer: I would increase the number of samples from each species in the study with the additional funding in order to increase the accuracy of the findings. Additionally, since factors like nutrition and age might have an impact on a bear's weight, I would also what to think about accounting for them in the model. I'm able to more precisely isolate the impact of species on weight by taking these controlling variables into consideration. To obtain information on the environmental factors, such as habitat and food availability, that can affect bear weights, I would also do out field research and outreach to experts for this data.
+
+## Part D. Explain the meaning of a p-value!
+__Explain in detail what it means specifically — in a statistical sense — for any result to be "statistically significant" at a particular -level. In other words, explain the meaning and use of p-values. You should research this question, and you should expect your answer to be at least a paragraph long.__ (6 pts)
+Answer: In the event that the null hypothesis is correct, a p-value indicates the probability of obtaining some test statistic as extreme as the one that was observed and essentially shows how likely it is to get the test results you did if the null hypothesis were true. It functions as a gauge of the evidence refuting the null hypothesis and we reject the null hypothesis when the p-value is less than or equal to the designated significance level (α), indicating that the observed impact is statistically significant. A p-value of less than 0.05, for example, suggests that there is less than a 5% chance that the observed results are the result of random variation if α is set at 0.05. As a result, we can figure out that the effect is statistically significant. Researchers can assess the strength of their findings and the possibility that the outcomes are not just the product of chance by using the p-value as a measure to verify their reuslts.

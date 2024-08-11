@@ -1,0 +1,233 @@
+---
+title: "HW3 Peer Assessment"
+output:
+  html_document:
+    df_print: paged
+date: "`r format(Sys.time(), '%c %Z')`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(tinytex.verbose = TRUE)
+
+library(car)
+```
+
+# Part 1: Logistic Regression
+# Background
+
+The objective is to predict whether a passenger survived the Titanic disaster
+
+## Data Description
+1. **Survival**: (1 if the passenger survived, 0 if they did not).
+2. **Pclass**: Numeric (1,2,3).
+3. **Sex**: Categorical (male, female)
+4. **Age**: Numeric.
+5. **SibSp**: Number of siblings/spouses aboard. 
+6. **Parch**: Number of parents/children aboard.
+7. **Fare**：Numeric.
+
+## Setup
+
+You can import the data and set up the problem with the following R code:
+
+```{r}
+# Import the data
+rawdata = read.csv("Titanic.csv", header=TRUE)
+
+# Remove columns that we do not want
+rawdata$X <- NULL
+rawdata$PassengerId <- NULL
+rawdata$Name <- NULL
+rawdata$Ticket <- NULL
+rawdata$Cabin <- NULL
+
+# Set variables as categorical
+rawdata$Pclass<-as.factor(rawdata$Pclass)
+rawdata$Sex<-as.factor(rawdata$Sex)
+rawdata$SibSp<-as.factor(rawdata$SibSp)
+rawdata$Parch<-as.factor(rawdata$Parch)
+
+# Print head of rawdata
+head(rawdata)
+```
+
+**Note:** For all of the following questions, treat variables **Age** and **Fare** as quantitative variables and **Pclass**, **Sex**, **SibSp**,and **Parch** as categorical variables. Categorical variables have already been converted to factors in the starter code.
+
+
+# Question 1: Fitting the Model - 9 pts
+
+Use *Survived* as the response variable to fit a logistic regression model using logit as the link function with *Pclass* as the predictor. Call it **model1**.
+
+**(a) 3 pts - Print the model1 summary table. What are the model parameters and estimates?**
+
+```{r}
+
+```
+
+**(b) 6 pts - Calculate the odds ratio and interpret the estimated coefficient of *Pclass3* with respect to the log-odds of survival and the odds of survival.**
+
+```{r}
+
+```
+
+Odds ratio: $\exp^{(-1.6390)}$ = 0.194
+
+# Question 2: Statistical Inference - 7 pts 
+
+**(a) 3 pts - Using model1, provide a 95% confidence interval for the coefficient of *Pclass3*.**
+
+```{r}
+
+```
+
+**(b) 4 pts - According to the summary table of model1, is *Pclass3* statistically significant? Is the overall regression statistically significant at the 0.01 significance level?**
+
+```{r}
+
+```
+
+# Question 3: Goodness of fit - 17 pts
+
+**(a) 5 pts - Assess the goodness-of-fit of model1 using both deviance residuals and Pearson residuals. What do you conclude?**
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+**(b) 2 pts - Calculate the estimated dispersion parameter for this model. Is this an overdispersed model?**
+
+```{r}
+
+```
+
+**(c) 2 pts - Using *Survived* as the response variable with *Pclass*, *Sex*, *SibSp*, and *Parch* as the predictors and logit as the link function, fit a logistic regression model and call it **model2**.**
+```{r}
+
+```
+
+**(d) 3 pts - Using both deviance residuals and Pearson residuals to assess the goodness-of-fit hypothesis test. What do you conclude? **
+```{r}
+
+```
+
+```{r}
+
+```
+
+**(e) 3 pts - Calculate the estimated dispersion parameter for this model. Compare model2 with model1 based on the p-values of the deviance residuals and Pearson residuals tests and the dispersion parameters of the two models. Which model is a better fit?**
+```{r}
+
+```
+
+**(f) 2 pts - Please provide two methods that can potentially improve the model fit.**
+
+# Question 4: Prediction - 7 pts
+
+Suppose there is a passenger with the following characteristics:
+
+1. **Pclass**: 3
+
+2. **Sex**: male
+
+3. **SibSp**: 2
+
+4. **Parch**: 1
+
+**(a) 4 pts - Predict the passenger's probability of surviving using model1 and model2.**
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+Model1 probability of survival = 0.251.
+
+```{r}
+
+```
+
+**(b) 3 pts - Compare your predictions. i.e. which model is more reliable based on the analysis?**
+
+# Part 2: Poisson Regression
+# Background
+Bicycle crossing counts for East River bridges crossing into Manhattan, New York City, and we want to focus on Brooklyn Bridge specifically.
+
+## Data Description
+1. **High.Temp...F.**: Numeric.
+2. **Low.Temp...F.**: Numeric.
+3. **Precipitation**: Numeric (range from 0-1).
+4. **DayOfWeek**: Categorical (Sun, Mon, Tues, Wed, Thu, Fri, Sat).
+5. **Brooklyn.Bridge**: number of bicyclists that cross Brooklyn Bridge in a day.
+
+## Setup
+
+You can import the data and set up the problem with the following R code:
+
+```{r}
+# Import data.
+casedata <- read.csv("bicycle.csv", header=T)
+
+casedata$Day <- as.Date(casedata$Day)
+casedata$Precipitation <- as.numeric(casedata$Precipitation)
+
+casedata$DayOfWeek <- weekdays(casedata$Day)
+casedata$DayOfWeek <- as.factor(casedata$DayOfWeek)
+
+casedata_brooklyn <- casedata[,c("High.Temp...F.", "Low.Temp...F.", "Precipitation", "Brooklyn.Bridge", "DayOfWeek")] 
+
+head(casedata_brooklyn)
+```
+
+# Question 5: Fitting the Model - 7 pts
+
+Using *Brooklyn.Bridge* as the response variable with *High.Temp...F.*, *Low.Temp...F.*, *Precipitation*, and *DayOfWeek* as the predictors, fit a poisson regression model and call it **poisson_model**.
+
+**(a) 3 pts -  Print the poisson_model summary table. Interpret the estimated coefficient of *Precipitation* with respect to the log expected Brooklyn Bridge count.**
+```{r}
+
+```
+
+**(b) 2 pts - Is the overall regression significant?**
+```{r}
+
+```
+
+**(c) 2 pts - Perform a goodness-of-fit test on poisson_model using deviance residuals. What do you conclude?**
+```{r}
+
+```
+
+# Question 6: Outlier detection - 13 pts
+
+**(a) 2 pts - Create a Q-Q plot of the residuals for the poisson_model.**
+```{r}
+
+```
+
+**(b) 4 pts - Using Cook's Distance with threshold = 1, how many outliers are identified in "poisson_model"? Remove the outliers from the dataset and create poisson_model2 with the new dataset.**
+```{r}
+
+```
+
+```{r}
+
+```
+
+**(c) 4 pts - Perform the deviance residual test to check the goodness-of-fit of poisson_model2. Is poisson_model2 a good fit? Discuss the appropriateness of using Cook's Distance for poisson regression.**
+```{r}
+
+```
+
+**(d) 3 pts - Use the alternative method for outlier detection discussed in lecture 13 on the first Poisson model ("poisson_model"). How many outliers are identified? What assumption is made in this approach?**
+
+```{r}
+
+```
